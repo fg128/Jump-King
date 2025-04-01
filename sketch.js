@@ -106,10 +106,16 @@ function setup() {
         }
     });
 
-
 	// Remove players when they disconnect
 	socket.on("playerDisconnected", (id) => {
 		delete otherPlayers[id];
+	});
+
+    socket.on("playerPushed", (data) => {
+		if (socket.id == data.id) {
+			player.currentPos.x += 75*data.pushX;
+			player.currentPos.y += 0;
+		}
 	});
 
 	// Initialize your game objects
@@ -224,6 +230,22 @@ function showLevel(levelNumberToShow) {
 	levels[levelNumberToShow].show();
 }
 
+function attemptPush() {
+	for (let id in otherPlayers) {
+		let otherPlayer = otherPlayers[id];
+		let distance = dist(player.currentPos.x, player.currentPos.y, otherPlayer.currentPos.x, otherPlayer.currentPos.y);
+		if (distance < 75) {
+			// Push if within 75 pixels
+			let pushX = (otherPlayer.currentPos.x - player.currentPos.x);
+			let pushY = (otherPlayer.currentPos.y - player.currentPos.y);
+            pushX /= Math.abs(pushX);
+            pushY /= Math.abs(pushY);
+			socket.emit("pushPlayer", { id: id, pushX: pushX, pushY: pushY });
+			break;
+		}
+	}
+}
+
 function showLines() {
 	if (creatingLines) {
 		for (let l of lines) {
@@ -249,7 +271,7 @@ function keyPressed() {
 			player.jumpHeld = true;
 			break;
 		case "R":
-			population.ResetAllPlayers();
+			player.ResetPlayer();
 			break;
 		case "S":
 			bumpSound.stop();
@@ -257,6 +279,10 @@ function keyPressed() {
 			landSound.stop();
 			fallSound.stop();
 			break;
+		case "P":
+			attemptPush();
+			break;
+
 	}
 	switch (keyCode) {
 		case LEFT_ARROW:
