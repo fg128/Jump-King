@@ -1,0 +1,4 @@
+Move server.js into outer folder called public
+https://nodejs.org/en/download
+npm install express socket.io
+node server.js
